@@ -1,13 +1,15 @@
 import time
+
 import numpy
 import tensorflow as tf
 
 import layers as L
-import cnn
+import cnn as cnn
 
-from flip_gradient import flip_gradient
-from cifar10 import inputs, unlabeled_inputs
-
+from flip_gradient import flip_gradient 
+from cifar10 import inputs, unlabeled_inputs 
+# import os
+# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('device', '/cpu:0', "device")
@@ -23,9 +25,12 @@ tf.app.flags.DEFINE_integer('eval_freq', 5, "")
 tf.app.flags.DEFINE_integer('num_epochs', 120, "the number of epochs for training")
 tf.app.flags.DEFINE_integer('epoch_decay_start', 80, "epoch of starting learning rate decay")
 tf.app.flags.DEFINE_integer('num_iter_per_epoch', int(400*128/100), "the number of updates per epoch")
-tf.app.flags.DEFINE_float('learning_rate', 0.001, "initial learning rate")
+tf.app.flags.DEFINE_float('learning_rate', 0.001, "initial leanring rate")
 tf.app.flags.DEFINE_float('mom1', 0.9, "initial momentum rate")
 tf.app.flags.DEFINE_float('mom2', 0.5, "momentum rate after epoch_decay_start")
+
+
+
 
 NUM_EVAL_EXAMPLES = 5000
 
@@ -34,6 +39,7 @@ def logit(x, is_training=True, update_batch_stats=True, stochastic=True, seed=12
                      update_batch_stats=update_batch_stats,
                      stochastic=stochastic,
                      seed=seed)[0]
+
 
 def forward(x, is_training=True, update_batch_stats=True, seed=1234):
     if is_training:
@@ -44,12 +50,6 @@ def forward(x, is_training=True, update_batch_stats=True, seed=1234):
         return logit(x, is_training=False,
                      update_batch_stats=update_batch_stats,
                      stochastic=False, seed=seed)
-    
-def compute_entropy(logits):
-    probs = tf.nn.softmax(logits, axis=-1)
-    entropy = -tf.reduce_sum(probs * tf.math.log(probs + 1e-8), axis=-1)  # Small epsilon to avoid log(0)
-    return entropy
-
 
 def build_training_graph(x1, y1, x2, lr, mom):
     global_step = tf.get_variable(
@@ -79,14 +79,11 @@ def build_training_graph(x1, y1, x2, lr, mom):
     
     label_dm = tf.concat([tf.reshape(lmb, [-1, 1]), tf.reshape(1. - lmb, [-1, 1])], axis=1)
     
+    # Calculate the feats and logits on interpolated samples
     with tf.variable_scope(tf.get_variable_scope(), reuse=True):
         logit, net = cnn.logit(x, is_training=True, update_batch_stats=True)
     
-    entropy = compute_entropy(logit)
-    
-    alpha = 0.5  # Adjust based on needs
-    weights = alpha * tf.exp(-entropy)  # Adaptive weight based on entropy
-
+    # Alignment Loss
     net_ = flip_gradient(net, lp)
     logitsdm = tf.layers.dense(net_, 1024, activation=tf.nn.relu, name='linear_dm1')
     logitsdm = tf.layers.dense(logitsdm, 1024, activation=tf.nn.relu, name='linear_dm2')
@@ -94,15 +91,16 @@ def build_training_graph(x1, y1, x2, lr, mom):
     dm_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label_dm, logits=logits_dm)) 
     additional_loss = dm_loss
     
-    nll_loss = tf.reduce_mean(lmb * weights * tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=logit))
+    nll_loss = tf.reduce_mean(lmb*tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=logit))
+    
     loss = nll_loss + additional_loss
     
     opt = tf.train.AdamOptimizer(learning_rate=lr, beta1=mom)
     tvars = tf.trainable_variables()
     grads_and_vars = opt.compute_gradients(loss, tvars)
     train_op = opt.apply_gradients(grads_and_vars, global_step=global_step)
-    
     return loss, train_op, global_step
+
 
 def build_eval_graph(x, y, ul_x):
     losses = {}
@@ -112,6 +110,7 @@ def build_eval_graph(x, y, ul_x):
     acc = L.accuracy(logit, y)
     losses['Acc'] = acc
     return losses
+
 
 def main(_):
     numpy.random.seed(seed=FLAGS.seed)
@@ -234,7 +233,6 @@ def main(_):
 
             saver.save(sess, sv.save_path, global_step=global_step)
         sv.stop()
-
 
 
 if __name__ == "__main__":

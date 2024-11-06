@@ -105,6 +105,28 @@ def conv(x, ksize, stride, f_in, f_out, padding='SAME', use_bias=False, seed=Non
         return x
 
 
+def depthwise_separable_conv(x, ksize, stride, f_in, f_out, seed=None, name=None, padding="SAME"):
+    with tf.variable_scope(name):
+        # Depthwise convolution
+        depthwise_filter = tf.get_variable(
+            "depthwise_filter",
+            shape=[ksize, ksize, f_in, 1],
+            initializer=tf.truncated_normal_initializer(stddev=0.1, seed=seed)
+        )
+        # Note: strides format is [1, stride, stride, 1]
+        h = tf.nn.depthwise_conv2d(x, depthwise_filter, strides=[1, stride, stride, 1], padding=padding)
+
+        # Pointwise convolution
+        pointwise_filter = tf.get_variable(
+            "pointwise_filter",
+            shape=[1, 1, f_in, f_out],
+            initializer=tf.truncated_normal_initializer(stddev=0.1, seed=seed)
+        )
+        # Note: Pointwise convolution with 1x1 filter to adjust channel depth
+        h = tf.nn.conv2d(h, pointwise_filter, strides=[1, 1, 1, 1], padding="SAME")
+        
+    return h
+
 def avg_pool(x, ksize=2, stride=2):
     return tf.nn.avg_pool(x,
                           ksize=[1, ksize, ksize, 1],
