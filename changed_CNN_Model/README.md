@@ -1,4 +1,4 @@
-# Adanet IPR Implementation with Adaptive Sample Selection
+# Adanet IPR Implementation with Updated CNN Model
 
 To run and reproduce the results in the paper (This script is written to be run on Linux (Tested on Ubuntu 24.04 LTS))
 1. Setup miniconda/anaconda on your machine as the code uses tensorflow 1 with python 3.6

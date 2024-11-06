@@ -1,6 +1,6 @@
-# Enhanced ADA-Net with Semi-Supervised Learning
+# Proposed Changes in Semi-Supervised Learning by Augmented Distribution Alignment
 
-This repository contains updates to ADA-Net incorporating semi-supervised learning techniques aimed at improving model performance. Key changes involve an adaptive sample selection strategy and CNN optimization for improved efficiency and accuracy. To explore the summary of changes performed and results achieved, open the `POC_Adanet.pdf` file in the repo.
+This repository contains updates to ADA-Net incorporating semi-supervised learning techniques aimed at improving model performance. Key changes involve an adaptive sample selection strategy and CNN optimization for improved efficiency and accuracy. To explore the summary of changes performed and results achieved, open the `POC_and_results.pdf` file in the repo.
 
 ## Updates Overview
 
