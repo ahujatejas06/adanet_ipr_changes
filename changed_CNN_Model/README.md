@@ -20,7 +20,7 @@ python cifar10.py --data_dir=./dataset/cifar10/ --dataset_seed=3
 ```
 6. Download the model weights from this link and save the weights folder(rename it to weights) in the root of the repo. The Weights folder should have all the weights without any subdirectory
 ```
-https://drive.google.com/drive/folders/1CfxE0ZuWTZ_kjLsKD9bmvEfR-5hwCuSF?usp=sharing
+https://drive.google.com/drive/folders/1fdwh2vBsSDwxRPZ7Oi4c0Yj9AO-VsRh9?usp=sharing
 ```
 7. To test the code on the dataset seed 1 use this code. Possible seed options = 1,2,3
 ```bash
